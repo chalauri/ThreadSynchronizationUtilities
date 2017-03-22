@@ -1,5 +1,6 @@
 package main;
 
+import main.phaser.FileSearch;
 import main.semaphores.Job;
 import main.semaphores.PrintQueue;
 import main.semaphores.multiple_copies_of_resource.PrintJobM;
@@ -12,6 +13,7 @@ import main.waiting_for_multiple_concurent_events.Participant;
 import main.waiting_for_multiple_concurent_events.VideoConference;
 
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Phaser;
 
 /**
  * Created by G.Chalauri on 03/22/17.
@@ -22,29 +24,60 @@ public class Main {
 
         // semaphoreExample();
         // multipleCopiesOfResourcesExample();
-       // videoConferenceExample();
-        cyclicBarrierExample();
+        // videoConferenceExample();
+        //cyclicBarrierExample();
+
+        phaserExample();
     }
 
-    private static  void cyclicBarrierExample(){
-        final int ROWS=10000;
-        final int NUMBERS=1000;
-        final int SEARCH=5;
-        final int PARTICIPANTS=5;
-        final int LINES_PARTICIPANT=2000;
+    private static void phaserExample() {
+        Phaser phaser = new Phaser(3);
+        FileSearch system = new FileSearch("C:\\Windows", "java",
+                phaser);
+        FileSearch apps =
+                new FileSearch("E:\\", "java", phaser);
+        FileSearch documents =
+                new FileSearch("C:\\Documents And Settings", "java", phaser);
 
-        MatrixMock mock=new MatrixMock(ROWS, NUMBERS,SEARCH);
+        Thread systemThread = new Thread(system, "System");
+        systemThread.start();
 
-        Results results=new Results(ROWS);
+        Thread appsThread = new Thread(apps, "Apps");
+        appsThread.start();
 
-        Grouper grouper=new Grouper(results);
+        Thread documentsThread = new Thread(documents, "Documents");
+        documentsThread.start();
 
-        CyclicBarrier barrier=new CyclicBarrier(PARTICIPANTS,grouper);
+        try {
+            systemThread.join();
+            appsThread.join();
+            documentsThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        Searcher searchers[]=new Searcher[PARTICIPANTS];
-        for (int i=0; i<PARTICIPANTS; i++){
-            searchers[i]=new Searcher(i*LINES_PARTICIPANT, (i*LINES_PARTICIPANT)+LINES_PARTICIPANT, mock, results, 5,barrier);
-            Thread thread=new Thread(searchers[i]);
+        System.out.println("Terminated: " + phaser.isTerminated());
+    }
+
+    private static void cyclicBarrierExample() {
+        final int ROWS = 10000;
+        final int NUMBERS = 1000;
+        final int SEARCH = 5;
+        final int PARTICIPANTS = 5;
+        final int LINES_PARTICIPANT = 2000;
+
+        MatrixMock mock = new MatrixMock(ROWS, NUMBERS, SEARCH);
+
+        Results results = new Results(ROWS);
+
+        Grouper grouper = new Grouper(results);
+
+        CyclicBarrier barrier = new CyclicBarrier(PARTICIPANTS, grouper);
+
+        Searcher searchers[] = new Searcher[PARTICIPANTS];
+        for (int i = 0; i < PARTICIPANTS; i++) {
+            searchers[i] = new Searcher(i * LINES_PARTICIPANT, (i * LINES_PARTICIPANT) + LINES_PARTICIPANT, mock, results, 5, barrier);
+            Thread thread = new Thread(searchers[i]);
             thread.start();
         }
         System.out.printf("Main: The main thread has finished.\n");
