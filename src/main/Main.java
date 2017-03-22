@@ -1,5 +1,7 @@
 package main;
 
+import main.controlling_phase_change.MyPhaser;
+import main.controlling_phase_change.Student;
 import main.phaser.FileSearch;
 import main.semaphores.Job;
 import main.semaphores.PrintQueue;
@@ -26,8 +28,34 @@ public class Main {
         // multipleCopiesOfResourcesExample();
         // videoConferenceExample();
         //cyclicBarrierExample();
+        //phaserExample();
+        customizingPhaserExample();
+    }
 
-        phaserExample();
+    private static void customizingPhaserExample() {
+        MyPhaser phaser = new MyPhaser();
+
+        Student students[] = new Student[5];
+        for (int i = 0; i < students.length; i++) {
+            students[i] = new Student(phaser);
+            phaser.register();
+        }
+
+        Thread threads[] = new Thread[students.length];
+        for (int i = 0; i < students.length; i++) {
+            threads[i] = new Thread(students[i], "Student " + i);
+            threads[i].start();
+        }
+
+        for (int i = 0; i < threads.length; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.printf("Main: The phaser has finished: %s.\n", phaser.isTerminated());
     }
 
     private static void phaserExample() {
