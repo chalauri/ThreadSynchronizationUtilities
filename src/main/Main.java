@@ -1,5 +1,7 @@
 package main;
 
+import main.changing_data_between_concurrent_tasks.Consumer;
+import main.changing_data_between_concurrent_tasks.Producer;
 import main.controlling_phase_change.MyPhaser;
 import main.controlling_phase_change.Student;
 import main.phaser.FileSearch;
@@ -14,7 +16,10 @@ import main.synchronizing_tasks_in_common_point.Searcher;
 import main.waiting_for_multiple_concurent_events.Participant;
 import main.waiting_for_multiple_concurent_events.VideoConference;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.Phaser;
 
 /**
@@ -29,7 +34,22 @@ public class Main {
         // videoConferenceExample();
         //cyclicBarrierExample();
         //phaserExample();
-        customizingPhaserExample();
+        //customizingPhaserExample();
+        exchangerExample();
+    }
+
+    private static void exchangerExample() {
+        List<String> buffer1 = new ArrayList<>();
+        List<String> buffer2 = new ArrayList<>();
+        Exchanger<List<String>> exchanger = new Exchanger<>();
+
+        Producer producer = new Producer(buffer1, exchanger);
+        Consumer consumer = new Consumer(buffer2, exchanger);
+
+        Thread threadProducer = new Thread(producer);
+        Thread threadConsumer = new Thread(consumer);
+        threadProducer.start();
+        threadConsumer.start();
     }
 
     private static void customizingPhaserExample() {
