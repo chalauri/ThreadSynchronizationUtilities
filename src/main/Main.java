@@ -4,8 +4,14 @@ import main.semaphores.Job;
 import main.semaphores.PrintQueue;
 import main.semaphores.multiple_copies_of_resource.PrintJobM;
 import main.semaphores.multiple_copies_of_resource.PrintQueueM;
+import main.synchronizing_tasks_in_common_point.Grouper;
+import main.synchronizing_tasks_in_common_point.MatrixMock;
+import main.synchronizing_tasks_in_common_point.Results;
+import main.synchronizing_tasks_in_common_point.Searcher;
 import main.waiting_for_multiple_concurent_events.Participant;
 import main.waiting_for_multiple_concurent_events.VideoConference;
+
+import java.util.concurrent.CyclicBarrier;
 
 /**
  * Created by G.Chalauri on 03/22/17.
@@ -16,7 +22,32 @@ public class Main {
 
         // semaphoreExample();
         // multipleCopiesOfResourcesExample();
-        videoConferenceExample();
+       // videoConferenceExample();
+        cyclicBarrierExample();
+    }
+
+    private static  void cyclicBarrierExample(){
+        final int ROWS=10000;
+        final int NUMBERS=1000;
+        final int SEARCH=5;
+        final int PARTICIPANTS=5;
+        final int LINES_PARTICIPANT=2000;
+
+        MatrixMock mock=new MatrixMock(ROWS, NUMBERS,SEARCH);
+
+        Results results=new Results(ROWS);
+
+        Grouper grouper=new Grouper(results);
+
+        CyclicBarrier barrier=new CyclicBarrier(PARTICIPANTS,grouper);
+
+        Searcher searchers[]=new Searcher[PARTICIPANTS];
+        for (int i=0; i<PARTICIPANTS; i++){
+            searchers[i]=new Searcher(i*LINES_PARTICIPANT, (i*LINES_PARTICIPANT)+LINES_PARTICIPANT, mock, results, 5,barrier);
+            Thread thread=new Thread(searchers[i]);
+            thread.start();
+        }
+        System.out.printf("Main: The main thread has finished.\n");
     }
 
     private static void videoConferenceExample() {
